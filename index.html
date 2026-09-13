@@ -16,9 +16,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Fichier de configuration externe -->
-    <script src="config.js"></script>
+    <!-- Fichier de configuration externe avec fallback sécurisé -->
+    <script src="config.js" onerror="window.SUPABASE_URL = ''; window.SUPABASE_ANON_KEY = '';"></script>
     <script>
+        // Fallback definitions if config.js is missing or doesn't define them
+        if (typeof SUPABASE_URL === 'undefined') { window.SUPABASE_URL = ''; }
+        if (typeof SUPABASE_ANON_KEY === 'undefined') { window.SUPABASE_ANON_KEY = ''; }
+
         tailwind.config = {
             theme: {
                 extend: {
@@ -755,7 +759,7 @@
 
     <!-- APPLICATION SCRIPT -->
     <script>
-        const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        const supabaseClient = (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.supabase) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         function appData() {
             return {
@@ -795,6 +799,22 @@
                 transferForm: { fromEnvelopeId: '', toEnvelopeId: '', amount: '' },
 
                 initApp() {
+                    // Check if redirected from Supabase email confirmation with hash tokens
+                    const hash = window.location.hash;
+                    if (hash && hash.includes('access_token') && supabaseClient) {
+                        supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                            if (session) {
+                                this.currentUser = { id: session.user.id, email: session.user.email, name: session.user.user_metadata?.name || 'Utilisateur' };
+                                this.isAuthenticated = true;
+                                localStorage.setItem('ez_user', JSON.stringify(this.currentUser));
+                                this.loadData();
+                                // Clean URL hash
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            }
+                        });
+                        return;
+                    }
+
                     const savedUser = localStorage.getItem('ez_user');
                     if (savedUser) {
                         this.currentUser = JSON.parse(savedUser);
@@ -838,17 +858,22 @@
                 async handleRegister() {
                     this.authMessage = '';
                     if (supabaseClient) {
+                        // Get current site URL to redirect back properly after email confirmation
+                        const redirectUrl = window.location.origin + window.location.pathname;
                         const { data, error } = await supabaseClient.auth.signUp({
                             email: this.authForm.email,
                             password: this.authForm.password,
-                            options: { data: { name: this.authForm.name } }
+                            options: { 
+                                data: { name: this.authForm.name },
+                                emailRedirectTo: redirectUrl
+                            }
                         });
                         if (error) {
                             this.authError = true;
                             this.authMessage = error.message;
                         } else {
                             this.authError = false;
-                            this.authMessage = 'Inscription réussie ! Veuillez vérifier vos e-mails ou vous connecter.';
+                            this.authMessage = 'Inscription réussie ! Un e-mail de confirmation vous a été envoyé. Vérifiez votre boîte de réception.';
                             this.authMode = 'login';
                         }
                     } else {
