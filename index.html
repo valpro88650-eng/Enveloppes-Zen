@@ -16,6 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Fichier de configuration externe -->
+    <script src="config.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -753,10 +755,6 @@
 
     <!-- APPLICATION SCRIPT -->
     <script>
-        // CONFIGURATION SUPABASE - Insérez vos identifiants ci-dessous :
-        const SUPABASE_URL = 'https://exgvnhsbldprvusvexqn.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4Z3ZuaHNibGRwcnZ1c3ZleHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDg4MzYsImV4cCI6MjEwNDgyNDgzNn0.7m2Yz7y1w8HowDHgTcFOXy-dh5_WAO4MCsea6oMHJAw'; 
-
         const supabaseClient = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
         function appData() {
