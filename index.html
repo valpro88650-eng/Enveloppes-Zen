@@ -848,10 +848,8 @@
                             this.loadData();
                         }
                     } else {
-                        this.currentUser = { id: 'demo', email: this.authForm.email, name: 'Mode Démo' };
-                        this.isAuthenticated = true;
-                        localStorage.setItem('ez_user', JSON.stringify(this.currentUser));
-                        this.loadDefaultData();
+                        this.authError = true;
+                        this.authMessage = 'Configuration Supabase manquante. Veuillez configurer vos clés.';
                     }
                 },
 
@@ -870,15 +868,19 @@
                         });
                         if (error) {
                             this.authError = true;
-                            this.authMessage = error.message;
+                            if (error.message && (error.message.toLowerCase().includes('rate limit') || error.message.toLowerCase().includes('too many requests'))) {
+                                this.authMessage = 'Trop de tentatives ou d\'e-mails envoyés avec cette adresse. Veuillez patienter quelques minutes avant de réessayer.';
+                            } else {
+                                this.authMessage = error.message;
+                            }
                         } else {
                             this.authError = false;
-                            this.authMessage = 'Inscription réussie ! Un e-mail de confirmation vous a été envoyé. Vérifiez votre boîte de réception.';
+                            this.authMessage = 'Inscription réussie ! Un e-mail de confirmation vous a été envoyé. Veuillez patienter et vérifier votre boîte de réception.';
                             this.authMode = 'login';
                         }
                     } else {
-                        this.authMessage = 'Veuillez configurer vos clés Supabase.';
                         this.authError = true;
+                        this.authMessage = 'Configuration Supabase manquante.';
                     }
                 },
 
@@ -918,7 +920,7 @@
                 },
 
                 loadData() {
-                    const localData = localStorage.getItem('ez_data_' + (this.currentUser?.id || 'demo'));
+                    const localData = localStorage.getItem('ez_data_' + (this.currentUser?.id || 'default'));
                     if (localData) {
                         const parsed = JSON.parse(localData);
                         this.accounts = parsed.accounts || [];
@@ -939,7 +941,7 @@
                         incomes: this.incomes,
                         expenses: this.expenses
                     };
-                    localStorage.setItem('ez_data_' + (this.currentUser?.id || 'demo'), JSON.stringify(dataToSave));
+                    localStorage.setItem('ez_data_' + (this.currentUser?.id || 'default'), JSON.stringify(dataToSave));
                 },
 
                 formatCurrency(val) {
