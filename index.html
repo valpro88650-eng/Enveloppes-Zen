@@ -14,15 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Supabase JS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Fichier de configuration externe avec fallback sécurisé -->
-    <script src="config.js" onerror="window.SUPABASE_URL = ''; window.SUPABASE_ANON_KEY = '';"></script>
     <script>
-        // Fallback definitions if config.js is missing or doesn't define them
-        if (typeof SUPABASE_URL === 'undefined') { window.SUPABASE_URL = ''; }
-        if (typeof SUPABASE_ANON_KEY === 'undefined') { window.SUPABASE_ANON_KEY = ''; }
-
         tailwind.config = {
             theme: {
                 extend: {
@@ -41,90 +33,9 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="h-full font-sans text-slate-800 antialiased" x-data="appData()" x-init="initApp()">
+<body class="h-full font-sans text-slate-800 antialiased pb-20 md:pb-0" x-data="appData()" x-init="initApp()">
 
-    <!-- AUTHENTICATION VIEW -->
-    <div x-show="!isAuthenticated" class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50 via-slate-50 to-blue-100" x-cloak>
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="flex justify-center">
-                <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200">
-                    <i class="fa-solid fa-wallet text-3xl"></i>
-                </div>
-            </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-slate-900 tracking-tight">EnveloppesZen</h2>
-            <p class="mt-2 text-center text-sm text-slate-600">La méthode des enveloppes numériques zéro-base</p>
-        </div>
-
-        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-white py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-slate-100">
-                
-                <!-- Notification / Modal Message inside Auth -->
-                <div x-show="authMessage" class="mb-4 p-3 rounded-xl text-sm font-medium" :class="authError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'" x-text="authMessage"></div>
-
-                <!-- Tab switcher -->
-                <div class="flex border-b border-slate-200 mb-6">
-                    <button @click="authMode = 'login'; authMessage = ''" class="flex-1 pb-3 text-sm font-semibold text-center border-b-2 transition" :class="authMode === 'login' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'">Connexion</button>
-                    <button @click="authMode = 'register'; authMessage = ''" class="flex-1 pb-3 text-sm font-semibold text-center border-b-2 transition" :class="authMode === 'register' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'">Inscription</button>
-                    <button @click="authMode = 'forgot'; authMessage = ''" class="flex-1 pb-3 text-sm font-semibold text-center border-b-2 transition" :class="authMode === 'forgot' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'">Récupération</button>
-                </div>
-
-                <!-- LOGIN FORM -->
-                <form x-show="authMode === 'login'" @submit.prevent="handleLogin" class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Email</label>
-                        <input type="email" required x-model="authForm.email" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" placeholder="votre@email.com">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Mot de passe</label>
-                        <input type="password" required x-model="authForm.password" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm" placeholder="••••••••">
-                    </div>
-                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-100 transition">Se connecter</button>
-                    
-                    <div class="relative my-4">
-                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
-                        <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400">Ou continuer avec</span></div>
-                    </div>
-
-                    <button type="button" @click="handleGoogleLogin" class="w-full py-3 px-4 border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl flex items-center justify-center gap-2 transition text-sm">
-                        <i class="fa-brands fa-google text-red-500"></i> Google
-                    </button>
-                </form>
-
-                <!-- REGISTER FORM -->
-                <form x-show="authMode === 'register'" @submit.prevent="handleRegister" class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Nom complet</label>
-                        <input type="text" required x-model="authForm.name" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Jean Dupont">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Email</label>
-                        <input type="email" required x-model="authForm.email" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="votre@email.com">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Mot de passe</label>
-                        <input type="password" required x-model="authForm.password" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="••••••••">
-                    </div>
-                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-100 transition">S'inscrire</button>
-                </form>
-
-                <!-- FORGOT PASSWORD FORM -->
-                <form x-show="authMode === 'forgot'" @submit.prevent="handleForgot" class="space-y-5">
-                    <p class="text-xs text-slate-500 leading-relaxed">Entrez votre adresse email pour recevoir un lien de réinitialisation de mot de passe.</p>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Email</label>
-                        <input type="email" required x-model="authForm.email" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="votre@email.com">
-                    </div>
-                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-100 transition">Envoyer le lien</button>
-                </form>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- MAIN APPLICATION VIEW -->
-    <div x-show="isAuthenticated" class="min-h-full flex flex-col bg-slate-50" x-cloak>
-        
-        <!-- Top Navigation Bar -->
+    <div class="min-h-full flex flex-col bg-slate-50">
         <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
@@ -132,10 +43,9 @@
                         <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-100">
                             <i class="fa-solid fa-wallet text-lg"></i>
                         </div>
-                        <span class="font-bold text-xl text-slate-900 tracking-tight">Enveloppes<span class="text-indigo-600">Zen</span></span>
+                        <span class="font-bold text-lg sm:text-xl text-slate-900 tracking-tight">Enveloppes<span class="text-indigo-600">Zen</span></span>
                     </div>
 
-                    <!-- Month Navigation & Controls -->
                     <div class="hidden md:flex items-center gap-3 bg-slate-100 px-3 py-1.5 rounded-2xl">
                         <button @click="changeMonth(-1)" class="w-8 h-8 rounded-xl hover:bg-white text-slate-600 flex items-center justify-center transition shadow-xs"><i class="fa-solid fa-chevron-left text-xs"></i></button>
                         <span class="text-sm font-semibold text-slate-800 capitalize min-w-[130px] text-center" x-text="formatCurrentMonth()"></span>
@@ -143,30 +53,17 @@
                         <button @click="goToCurrentMonth()" class="text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition ml-1">Ce mois</button>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <button @click="openModal('expense')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 flex items-center gap-2 transition">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button @click="openOperationModal('expense')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-md shadow-indigo-100 flex items-center gap-1.5 sm:gap-2 transition">
                             <i class="fa-solid fa-plus text-xs"></i>
-                            <span class="hidden sm:inline">Ajouter Dépense</span>
+                            <span class="inline">Ajouter une opération</span>
                         </button>
-                        <div class="relative" x-data="{ openUserMenu: false }">
-                            <button @click="openUserMenu = !openUserMenu" class="w-10 h-10 rounded-xl bg-slate-200 text-slate-700 font-bold flex items-center justify-center hover:bg-slate-300 transition">
-                                <span x-text="currentUser && currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'"></span>
-                            </button>
-                            <div x-show="openUserMenu" @click.away="openUserMenu = false" class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl py-2 border border-slate-100 z-50">
-                                <div class="px-4 py-2 border-b border-slate-100">
-                                    <p class="text-xs font-semibold text-slate-800" x-text="currentUser ? currentUser.name : ''"></p>
-                                    <p class="text-xs text-slate-500 truncate" x-text="currentUser ? currentUser.email : ''"></p>
-                                </div>
-                                <button @click="logout()" class="w-full text-left px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
-            <!-- Mobile Month Navigation Bar -->
             <div class="md:hidden flex items-center justify-between px-4 py-2 bg-slate-100 border-t border-slate-200">
                 <button @click="changeMonth(-1)" class="p-2 text-slate-600"><i class="fa-solid fa-chevron-left text-xs"></i></button>
-                <span class="text-sm font-semibold text-slate-800 capitalize" x-text="formatCurrentMonth()"></span>
+                <span class="text-xs sm:text-sm font-semibold text-slate-800 capitalize" x-text="formatCurrentMonth()"></span>
                 <div class="flex items-center gap-2">
                     <button @click="goToCurrentMonth()" class="text-xs font-medium text-indigo-600 bg-white px-2 py-1 rounded-lg">Ce mois</button>
                     <button @click="changeMonth(1)" class="p-2 text-slate-600"><i class="fa-solid fa-chevron-right text-xs"></i></button>
@@ -174,12 +71,9 @@
             </div>
         </header>
 
-        <!-- Main Body Layout -->
-        <div class="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
-            
-            <!-- Sidebar Navigation Tabs -->
-            <aside class="w-full md:w-64 flex-shrink-0">
-                <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 space-y-1">
+        <div class="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 gap-4 sm:gap-6">
+            <aside class="hidden md:block w-full md:w-64 flex-shrink-0">
+                <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 space-y-1 sticky top-20">
                     <button @click="currentTab = 'dashboard'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'">
                         <i class="fa-solid fa-house-chimney w-5"></i> Tableau de bord
                     </button>
@@ -201,15 +95,55 @@
                     <button @click="currentTab = 'projections'; $nextTick(() => renderProjectionsChart())" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'projections' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'">
                         <i class="fa-solid fa-chart-line w-5"></i> Projections Enveloppes
                     </button>
+                    <button @click="currentTab = 'settings'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'settings' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'">
+                        <i class="fa-solid fa-cloud-arrow-down w-5"></i> Sauvegarde & Données
+                    </button>
+
+                    <!-- Deuxième menu : Espace Personnel & Pages Vierges -->
+                    <div class="pt-4 mt-4 border-t border-slate-200">
+                        <p class="px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Espace Personnel</p>
+                        <button @click="currentTab = 'profile'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'profile' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'">
+                            <i class="fa-solid fa-user-gear w-5"></i> Mon Compte & Sécurité
+                        </button>
+                        <button @click="currentTab = 'page1'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'page1' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'">
+                            <i class="fa-solid fa-file w-5"></i> Page Vierge 1
+                        </button>
+                        <button @click="currentTab = 'page2'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'page2' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'">
+                            <i class="fa-solid fa-file w-5"></i> Page Vierge 2
+                        </button>
+                        <button @click="currentTab = 'page3'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'page3' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-50'">
+                            <i class="fa-solid fa-file w-5"></i> Page Vierge 3
+                        </button>
+                    </div>
                 </div>
             </aside>
 
-            <!-- CONTENT AREA -->
-            <main class="flex-1 space-y-6">
-                
-                <!-- TAB 1: DASHBOARD -->
+            <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 px-2 py-1.5 flex justify-around items-center shadow-lg">
+                <button @click="currentTab = 'dashboard'" class="flex flex-col items-center p-2 rounded-xl transition" :class="currentTab === 'dashboard' ? 'text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-800'">
+                    <i class="fa-solid fa-house-chimney text-base mb-0.5"></i>
+                    <span class="text-[10px]">Accueil</span>
+                </button>
+                <button @click="currentTab = 'envelopes'" class="flex flex-col items-center p-2 rounded-xl transition" :class="currentTab === 'envelopes' ? 'text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-800'">
+                    <i class="fa-solid fa-envelope-open-text text-base mb-0.5"></i>
+                    <span class="text-[10px]">Enveloppes</span>
+                </button>
+                <button @click="currentTab = 'fixed'" class="flex flex-col items-center p-2 rounded-xl transition" :class="currentTab === 'fixed' ? 'text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-800'">
+                    <i class="fa-solid fa-file-invoice-dollar text-base mb-0.5"></i>
+                    <span class="text-[10px]">Fixes</span>
+                </button>
+                <button @click="currentTab = 'incomes'" class="flex flex-col items-center p-2 rounded-xl transition" :class="currentTab === 'incomes' ? 'text-indigo-600 font-bold' : 'text-slate-500 hover:text-slate-800'">
+                    <i class="fa-solid fa-sack-dollar text-base mb-0.5"></i>
+                    <span class="text-[10px]">Revenus</span>
+                </button>
+                <button @click="modals.mobileMenu = true" class="flex flex-col items-center p-2 rounded-xl transition text-slate-500 hover:text-slate-800">
+                    <i class="fa-solid fa-bars text-base mb-0.5"></i>
+                    <span class="text-[10px]">Menu</span>
+                </button>
+            </nav>
+
+            <main class="flex-1 space-y-6 min-w-0">
+                <!-- DASHBOARD -->
                 <div x-show="currentTab === 'dashboard'" class="space-y-6" x-cloak>
-                    <!-- KPI Summary Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div @click="openClearedModal('incomes')" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-indigo-300 transition group">
                             <div class="flex items-center justify-between">
@@ -227,37 +161,25 @@
                             <p class="text-2xl font-bold text-slate-900 mt-2" x-text="formatCurrency(getTotalFixed())"></p>
                             <p class="text-xs text-slate-500 mt-1">Cliquez pour pointer / vérifier</p>
                         </div>
-                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div @click="openEnvelopesSummaryModal()" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 cursor-pointer hover:border-indigo-300 transition group">
                             <div class="flex items-center justify-between">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Budget Enveloppes</p>
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400 group-hover:text-indigo-600 transition">Total enveloppes <i class="fa-solid fa-arrow-pointer text-[10px] ml-1"></i></p>
                                 <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-envelope text-xs"></i></span>
                             </div>
                             <p class="text-2xl font-bold text-slate-900 mt-2" x-text="formatCurrency(getTotalEnvelopesBudget())"></p>
-                            <p class="text-xs text-slate-500 mt-1">Alloué aux dépenses courantes</p>
+                            <p class="text-xs text-slate-500 mt-1">Pour le mois en cours</p>
                         </div>
                         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-                            <div class="absolute right-0 top-0 w-2 h-full" :class="getZeroBaseDifference() === 0 ? 'bg-emerald-500' : (getZeroBaseDifference() > 0 ? 'bg-blue-500' : 'bg-red-500')"></div>
+                            <div class="absolute right-0 top-0 w-2 h-full" :class="getZeroBaseDifference() >= 0 ? 'bg-emerald-500' : 'bg-red-500'"></div>
                             <div class="flex items-center justify-between">
-                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Reste à Allouer (0-Base)</p>
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Argent disponible</p>
                                 <span class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i class="fa-solid fa-scale-balanced text-xs"></i></span>
                             </div>
-                            <p class="text-2xl font-bold mt-2" :class="getZeroBaseDifference() === 0 ? 'text-emerald-600' : (getZeroBaseDifference() > 0 ? 'text-blue-600' : 'text-red-600')" x-text="formatCurrency(getZeroBaseDifference())"></p>
-                            <p class="text-xs text-slate-500 mt-1" x-text="getZeroBaseDifference() === 0 ? 'Objectif atteint (0€)' : (getZeroBaseDifference() > 0 ? 'Montant à répartir' : 'Dépassement du budget')"></p>
+                            <p class="text-2xl font-bold mt-2" :class="getZeroBaseDifference() >= 0 ? 'text-emerald-600' : 'text-red-600'" x-text="formatCurrency(getZeroBaseDifference())"></p>
+                            <p class="text-xs text-slate-500 mt-1">Solde disponible à dépenser</p>
                         </div>
                     </div>
 
-                    <!-- Surplus Transfer Banner -->
-                    <div class="bg-gradient-to-r from-indigo-900 to-indigo-700 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div>
-                            <h3 class="text-lg font-bold">Gestion des excédents & Fin de mois</h3>
-                            <p class="text-xs text-indigo-200 mt-1">Déplacez vos restes d'enveloppes ou soldes positifs vers une enveloppe d'épargne ou vacances.</p>
-                        </div>
-                        <button @click="openModal('transfer')" class="bg-white text-indigo-900 hover:bg-indigo-50 px-4 py-2.5 rounded-xl text-sm font-semibold shadow transition whitespace-nowrap">
-                            <i class="fa-solid fa-right-left mr-2"></i> Transférer un excédent
-                        </button>
-                    </div>
-
-                    <!-- Envelopes Progress Overview -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-bold text-slate-900 text-base">Enveloppes en cours</h3>
@@ -296,7 +218,6 @@
                         </div>
                     </div>
 
-                    <!-- Recent Expenses List -->
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-bold text-slate-900 text-base">Dernières dépenses enregistrées</h3>
@@ -306,27 +227,30 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase">
-                                        <th class="pb-3 font-semibold">Date</th>
-                                        <th class="pb-3 font-semibold">Libellé</th>
-                                        <th class="pb-3 font-semibold">Enveloppe / Catégorie</th>
-                                        <th class="pb-3 font-semibold">Compte</th>
-                                        <th class="pb-3 font-semibold text-right">Montant</th>
+                                        <th class="pb-3 pr-6 font-semibold">Date</th>
+                                        <th class="pb-3 pr-6 font-semibold">Libellé / Sous-catégorie</th>
+                                        <th class="pb-3 pr-6 font-semibold">Enveloppe / Catégorie</th>
+                                        <th class="pb-3 pr-6 font-semibold">Compte</th>
+                                        <th class="pb-3 pr-6 font-semibold text-right">Montant</th>
                                         <th class="pb-3 font-semibold text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 text-sm">
                                     <template x-for="exp in currentMonthExpenses" :key="exp.id">
                                         <tr class="hover:bg-slate-50/50">
-                                            <td class="py-3 text-slate-500 text-xs" x-text="formatDate(exp.date)"></td>
-                                            <td class="py-3 font-medium text-slate-800" x-text="exp.label"></td>
-                                            <td class="py-3">
-                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
+                                            <td class="py-3 pr-6 text-slate-500 text-xs whitespace-nowrap" x-text="formatDate(exp.date)"></td>
+                                            <td class="py-3 pr-6 font-medium text-slate-800">
+                                                <span x-text="exp.label"></span>
+                                                <span x-show="exp.subcategory" class="block text-[11px] text-indigo-600 font-medium" x-text="exp.subcategory"></span>
+                                            </td>
+                                            <td class="py-3 pr-6">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 whitespace-nowrap">
                                                     <i class="fa-solid fa-envelope text-[10px] text-indigo-500"></i>
                                                     <span x-text="getEnvelopeName(exp.envelopeId)"></span>
                                                 </span>
                                             </td>
-                                            <td class="py-3 text-xs text-slate-500" x-text="getAccountName(exp.accountId)"></td>
-                                            <td class="py-3 text-right font-bold text-red-600" x-text="'-' + formatCurrency(exp.amount)"></td>
+                                            <td class="py-3 pr-6 text-xs text-slate-500 whitespace-nowrap" x-text="getAccountName(exp.accountId)"></td>
+                                            <td class="py-3 pr-6 text-right font-bold text-red-600 whitespace-nowrap" x-text="'-' + formatCurrency(exp.amount)"></td>
                                             <td class="py-3 text-center">
                                                 <button @click="deleteExpense(exp.id)" class="text-slate-400 hover:text-red-600 p-1 transition"><i class="fa-solid fa-trash text-xs"></i></button>
                                             </td>
@@ -343,12 +267,11 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: ENVELOPES & BUDGETS -->
                 <div x-show="currentTab === 'envelopes'" class="space-y-6" x-cloak>
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div>
                             <h2 class="text-lg font-bold text-slate-900">Gestion des Enveloppes Numériques</h2>
-                            <p class="text-xs text-slate-500 mt-1">Définissez vos budgets mensuels. Chaque mois, les enveloppes se reportent automatiquement.</p>
+                            <p class="text-xs text-slate-500 mt-1">Définissez vos budgets mensuels.</p>
                         </div>
                         <button @click="openModal('envelope')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 flex items-center gap-2 transition">
                             <i class="fa-solid fa-plus text-xs"></i> Nouvelle Enveloppe
@@ -366,7 +289,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="font-bold text-slate-800" x-text="env.name"></h4>
-                                                <p class="text-xs text-slate-400" x-text="env.category + (env.subcategory ? ' › ' + env.subcategory : '')"></p>
+                                                <p class="text-xs text-slate-400" x-text="env.category"></p>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-1">
@@ -391,12 +314,11 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: FIXED CHARGES -->
                 <div x-show="currentTab === 'fixed'" class="space-y-6" x-cloak>
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div>
                             <h2 class="text-lg font-bold text-slate-900">Charges Fixes Mensuelles</h2>
-                            <p class="text-xs text-slate-500 mt-1">Loyers, abonnements, crédits et prélèvements automatiques récurrents.</p>
+                            <p class="text-xs text-slate-500 mt-1">Loyers, abonnements et crédits.</p>
                         </div>
                         <button @click="openModal('fixed')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 flex items-center gap-2 transition">
                             <i class="fa-solid fa-plus text-xs"></i> Nouvelle Charge Fixe
@@ -408,22 +330,22 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase">
-                                        <th class="pb-3 font-semibold">Libellé</th>
-                                        <th class="pb-3 font-semibold">Catégorie</th>
-                                        <th class="pb-3 font-semibold">Compte débité</th>
-                                        <th class="pb-3 font-semibold text-right">Montant</th>
-                                        <th class="pb-3 font-semibold text-center">Pointé</th>
+                                        <th class="pb-3 pr-6 font-semibold">Date</th>
+                                        <th class="pb-3 pr-6 font-semibold">Libellé</th>
+                                        <th class="pb-3 pr-6 font-semibold">Compte débité</th>
+                                        <th class="pb-3 pr-6 font-semibold text-right">Montant</th>
+                                        <th class="pb-3 pr-6 font-semibold text-center">Pointé</th>
                                         <th class="pb-3 font-semibold text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 text-sm">
                                     <template x-for="item in currentMonthFixed" :key="item.id">
                                         <tr class="hover:bg-slate-50/50">
-                                            <td class="py-3 font-medium text-slate-800" x-text="item.label"></td>
-                                            <td class="py-3 text-xs text-slate-500" x-text="item.category"></td>
-                                            <td class="py-3 text-xs text-slate-500" x-text="getAccountName(item.accountId)"></td>
-                                            <td class="py-3 text-right font-bold text-amber-600" x-text="formatCurrency(item.amount)"></td>
-                                            <td class="py-3 text-center">
+                                            <td class="py-3 pr-6 text-slate-500 text-xs whitespace-nowrap" x-text="formatDate(item.date)"></td>
+                                            <td class="py-3 pr-6 font-medium text-slate-800" x-text="item.label"></td>
+                                            <td class="py-3 pr-6 text-xs text-slate-500 whitespace-nowrap" x-text="getAccountName(item.accountId)"></td>
+                                            <td class="py-3 pr-6 text-right font-bold text-amber-600 whitespace-nowrap" x-text="formatCurrency(item.amount)"></td>
+                                            <td class="py-3 pr-6 text-center">
                                                 <input type="checkbox" x-model="item.cleared" @change="saveData()" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
                                             </td>
                                             <td class="py-3 text-center flex items-center justify-center gap-2">
@@ -438,14 +360,13 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: INCOMES -->
                 <div x-show="currentTab === 'incomes'" class="space-y-6" x-cloak>
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div>
                             <h2 class="text-lg font-bold text-slate-900">Revenus du Mois</h2>
-                            <p class="text-xs text-slate-500 mt-1">Salaires, rentes, aides et rentrées d'argent diverses.</p>
+                            <p class="text-xs text-slate-500 mt-1">Salaires et rentrées d'argent.</p>
                         </div>
-                        <button @click="openModal('income')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 flex items-center gap-2 transition">
+                        <button @click="openOperationModal('income')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 flex items-center gap-2 transition">
                             <i class="fa-solid fa-plus text-xs"></i> Nouveau Revenu
                         </button>
                     </div>
@@ -455,20 +376,22 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase">
-                                        <th class="pb-3 font-semibold">Source / Libellé</th>
-                                        <th class="pb-3 font-semibold">Compte crédité</th>
-                                        <th class="pb-3 font-semibold text-right">Montant</th>
-                                        <th class="pb-3 font-semibold text-center">Pointé</th>
+                                        <th class="pb-3 pr-6 font-semibold">Date</th>
+                                        <th class="pb-3 pr-6 font-semibold">Source / Libellé</th>
+                                        <th class="pb-3 pr-6 font-semibold">Compte crédité</th>
+                                        <th class="pb-3 pr-6 font-semibold text-right">Montant</th>
+                                        <th class="pb-3 pr-6 font-semibold text-center">Pointé</th>
                                         <th class="pb-3 font-semibold text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 text-sm">
                                     <template x-for="inc in currentMonthIncomes" :key="inc.id">
                                         <tr class="hover:bg-slate-50/50">
-                                            <td class="py-3 font-medium text-slate-800" x-text="inc.label"></td>
-                                            <td class="py-3 text-xs text-slate-500" x-text="getAccountName(inc.accountId)"></td>
-                                            <td class="py-3 text-right font-bold text-emerald-600" x-text="formatCurrency(inc.amount)"></td>
-                                            <td class="py-3 text-center">
+                                            <td class="py-3 pr-6 text-slate-500 text-xs whitespace-nowrap" x-text="formatDate(inc.date)"></td>
+                                            <td class="py-3 pr-6 font-medium text-slate-800" x-text="inc.label"></td>
+                                            <td class="py-3 pr-6 text-xs text-slate-500 whitespace-nowrap" x-text="getAccountName(inc.accountId)"></td>
+                                            <td class="py-3 pr-6 text-right font-bold text-emerald-600 whitespace-nowrap" x-text="formatCurrency(inc.amount)"></td>
+                                            <td class="py-3 pr-6 text-center">
                                                 <input type="checkbox" x-model="inc.cleared" @change="saveData()" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
                                             </td>
                                             <td class="py-3 text-center flex items-center justify-center gap-2">
@@ -483,12 +406,11 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: ACCOUNTS -->
                 <div x-show="currentTab === 'accounts'" class="space-y-6" x-cloak>
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-lg font-bold text-slate-900">Comptes Bancaires & Soldes Initiaux</h2>
-                            <p class="text-xs text-slate-500 mt-1">Gérez vos différents comptes (courant, livret, épargne).</p>
+                            <h2 class="text-lg font-bold text-slate-900">Comptes Bancaires</h2>
+                            <p class="text-xs text-slate-500 mt-1">Gérez vos différents comptes.</p>
                         </div>
                         <button @click="openModal('account')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 flex items-center gap-2 transition">
                             <i class="fa-solid fa-plus text-xs"></i> Nouveau Compte
@@ -507,7 +429,6 @@
                                         </div>
                                     </div>
                                     <h4 class="font-bold text-slate-800" x-text="acc.name"></h4>
-                                    <p class="text-xs text-slate-400 capitalize" x-text="acc.type">Compte</p>
                                 </div>
                                 <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
                                     <span class="text-xs text-slate-500">Solde estimé :</span>
@@ -518,10 +439,9 @@
                     </div>
                 </div>
 
-                <!-- TAB 6: CATEGORIES & ANALYSES -->
                 <div x-show="currentTab === 'categories'" class="space-y-6" x-cloak>
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                        <h2 class="text-lg font-bold text-slate-900 mb-1">Répartition des Dépenses par Catégorie</h2>
+                        <h2 class="text-lg font-bold text-slate-900 mb-1">Répartition des Dépenses</h2>
                         <p class="text-xs text-slate-500 mb-6">Visualisez où va votre argent ce mois-ci.</p>
                         <div class="max-w-md mx-auto h-80">
                             <canvas id="categoryChart"></canvas>
@@ -529,58 +449,199 @@
                     </div>
                 </div>
 
-                <!-- TAB 7: PROJECTIONS -->
                 <div x-show="currentTab === 'projections'" class="space-y-6" x-cloak>
                     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-                        <h2 class="text-lg font-bold text-slate-900 mb-1">Projections & Évolution du Budget</h2>
-                        <p class="text-xs text-slate-500 mb-6">Suivi des revenus vs charges sur les derniers mois.</p>
+                        <h2 class="text-lg font-bold text-slate-900 mb-1">Projections & Évolution</h2>
+                        <p class="text-xs text-slate-500 mb-6">Suivi des revenus vs charges.</p>
                         <div class="h-80">
                             <canvas id="projectionsChart"></canvas>
                         </div>
                     </div>
                 </div>
 
+                <div x-show="currentTab === 'settings'" class="space-y-6" x-cloak>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 mb-1">Sauvegarde & Restauration des Données</h2>
+                            <p class="text-xs text-slate-500">Vos données sont stockées en toute sécurité sur votre appareil. Vous pouvez à tout moment exporter un fichier de sauvegarde ou en importer un.</p>
+                        </div>
+                        <!-- ... existing settings contents ... -->
+                    </div>
+                </div>
+
+                <!-- PROFILE / MON COMPTE -->
+                <div x-show="currentTab === 'profile'" class="space-y-6" x-cloak>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 mb-1">Mon Compte & Sécurité</h2>
+                            <p class="text-xs text-slate-500">Gérez vos informations personnelles, votre adresse e-mail, votre mot de passe et votre compte.</p>
+                        </div>
+
+                        <div x-show="passwordMessage" class="p-3 rounded-xl text-xs font-semibold" :class="passwordError ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'" x-text="passwordMessage"></div>
+
+                        <!-- Email section -->
+                        <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-3">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-envelope text-indigo-600"></i> Adresse e-mail du compte
+                            </h3>
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <input type="email" x-model="userEmail" @change="saveData()" class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <button @click="saveData(); passwordMessage = 'Adresse e-mail mise à jour avec succès !'; passwordError = false;" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow transition whitespace-nowrap">Mettre à jour l'e-mail</button>
+                            </div>
+                        </div>
+
+                        <!-- Password change section -->
+                        <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-4">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-lock text-indigo-600"></i> Modifier le mot de passe
+                            </h3>
+                            <form @submit.prevent="updatePassword" class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Mot de passe actuel</label>
+                                    <input type="password" required x-model="passwordForm.current" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nouveau mot de passe</label>
+                                        <input type="password" required x-model="passwordForm.newPass" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Confirmer le nouveau mot de passe</label>
+                                        <input type="password" required x-model="passwordForm.confirm" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="••••••••">
+                                    </div>
+                                </div>
+                                <div class="pt-2">
+                                    <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow transition">Modifier le mot de passe</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Delete account section -->
+                        <div class="bg-red-50 rounded-2xl p-5 border border-red-200 space-y-3">
+                            <h3 class="font-bold text-red-900 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-red-600"></i> Zone de Danger : Supprimer le compte
+                            </h3>
+                            <p class="text-xs text-red-700">La suppression de votre compte effacera toutes vos données locales (comptes, enveloppes, dépenses). Cette action est irréversible.</p>
+                            <div class="pt-2">
+                                <button @click="deleteAccountData()" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-xs shadow transition flex items-center gap-2">
+                                    <i class="fa-solid fa-trash"></i> Supprimer définitivement mon compte et mes données
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE VIERGE 1 -->
+                <div x-show="currentTab === 'page1'" class="space-y-6" x-cloak>
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 text-center space-y-4">
+                        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-sm">
+                            <i class="fa-solid fa-file"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-900">Page Vierge 1</h2>
+                        <p class="text-sm text-slate-500 max-w-md mx-auto">Ceci est une page vide réservée à vos ajouts personnalisés. Vous pouvez y intégrer vos propres tableaux, notes ou blocs fonctionnels selon vos besoins.</p>
+                        <div class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 mt-6 text-slate-400 text-xs italic">
+                            Espace libre prêt pour vos personnalisations...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE VIERGE 2 -->
+                <div x-show="currentTab === 'page2'" class="space-y-6" x-cloak>
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 text-center space-y-4">
+                        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-sm">
+                            <i class="fa-solid fa-file"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-900">Page Vierge 2</h2>
+                        <p class="text-sm text-slate-500 max-w-md mx-auto">Ceci est une deuxième page vide pour vos projets, objectifs ou données complémentaires.</p>
+                        <div class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 mt-6 text-slate-400 text-xs italic">
+                            Espace libre prêt pour vos personnalisations...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE VIERGE 3 -->
+                <div x-show="currentTab === 'page3'" class="space-y-6" x-cloak>
+                    <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 text-center space-y-4">
+                        <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-sm">
+                            <i class="fa-solid fa-file"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-900">Page Vierge 3</h2>
+                        <p class="text-sm text-slate-500 max-w-md mx-auto">Ceci est une troisième page vide pour stocker ou afficher tout autre contenu de votre choix.</p>
+                        <div class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 mt-6 text-slate-400 text-xs italic">
+                            Espace libre prêt pour vos personnalisations...
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
 
     <!-- MODALS -->
-    <!-- Modal Dépense -->
-    <div x-show="modals.expense" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
+    <!-- Modal Opération (Dépense ou Revenu) -->
+    <div x-show="modals.operation" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-            <h3 class="text-lg font-bold text-slate-900">Ajouter une dépense</h3>
-            <form @submit.prevent="submitExpense" class="space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900" x-text="operationForm.id ? 'Modifier l\'opération' : 'Ajouter une opération'"></h3>
+                <button @click="modals.operation = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <!-- Type Selector Tabs -->
+            <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
+                <button type="button" @click="operationForm.type = 'expense'" class="py-2 rounded-lg text-xs font-bold transition" :class="operationForm.type === 'expense' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
+                    <i class="fa-solid fa-arrow-trend-down mr-1"></i> Dépense
+                </button>
+                <button type="button" @click="operationForm.type = 'income'" class="py-2 rounded-lg text-xs font-bold transition" :class="operationForm.type === 'income' ? 'bg-white text-emerald-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'">
+                    <i class="fa-solid fa-arrow-trend-up mr-1"></i> Entrée d'argent
+                </button>
+            </div>
+
+            <form @submit.prevent="submitOperation" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Libellé</label>
-                    <input type="text" required x-model="expenseForm.label" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="Courses Carrefour">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1" x-text="operationForm.type === 'expense' ? 'Libellé de la dépense' : 'Source / Libellé du revenu'"></label>
+                    <input type="text" required x-model="operationForm.label" class="block w-full box-border px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500" :placeholder="operationForm.type === 'expense' ? 'Courses Carrefour' : 'Salaire / Remboursement'">
                 </div>
+                
+                <template x-if="operationForm.type === 'expense'">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Sous-catégorie (facultatif)</label>
+                        <input type="text" x-model="operationForm.subcategory" class="block w-full box-border px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="ex: Supermarché, Essence...">
+                    </div>
+                </template>
+
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Montant (€)</label>
-                    <input type="number" step="0.01" required x-model="expenseForm.amount" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="45.50">
+                    <input type="number" step="0.01" required x-model="operationForm.amount" class="block w-full box-border px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="45.50">
                 </div>
+
+                <template x-if="operationForm.type === 'expense'">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Enveloppe budgétaire</label>
+                        <select x-model="operationForm.envelopeId" class="block w-full box-border px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <template x-for="env in currentMonthEnvelopes" :key="env.id">
+                                <option :value="env.id" x-text="env.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                </template>
+
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Enveloppe</label>
-                    <select x-model="expenseForm.envelopeId" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500">
-                        <template x-for="env in currentMonthEnvelopes" :key="env.id">
-                            <option :value="env.id" x-text="env.name"></option>
-                        </template>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Compte bancaire</label>
-                    <select x-model="expenseForm.accountId" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1" x-text="operationForm.type === 'expense' ? 'Compte débité' : 'Compte crédité'"></label>
+                    <select x-model="operationForm.accountId" class="block w-full box-border px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <template x-for="acc in accounts" :key="acc.id">
                             <option :value="acc.id" x-text="acc.name"></option>
                         </template>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Date</label>
-                    <input type="date" required x-model="expenseForm.date" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="modals.expense = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Annuler</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow">Enregistrer</button>
+
+                <div class="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <label class="text-[11px] font-semibold text-slate-500 uppercase whitespace-nowrap">Date</label>
+                        <input type="date" required x-model="operationForm.date" class="px-2.5 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="modals.operation = false" class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Annuler</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow">Enregistrer</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -593,24 +654,24 @@
             <form @submit.prevent="submitEnvelope" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nom</label>
-                    <input type="text" required x-model="envelopeForm.name" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="Alimentation">
+                    <input type="text" required x-model="envelopeForm.name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Alimentation">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Budget mensuel (€)</label>
-                    <input type="number" step="0.01" required x-model="envelopeForm.budget" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="300">
+                    <input type="number" step="0.01" required x-model="envelopeForm.budget" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="300">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Catégorie</label>
-                    <input type="text" x-model="envelopeForm.category" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500" placeholder="Essentiel">
+                    <input type="text" x-model="envelopeForm.category" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Essentiel">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Couleur</label>
-                        <input type="color" x-model="envelopeForm.color" class="w-full h-10 px-1 py-1 rounded-xl border border-slate-200 cursor-pointer">
+                        <input type="color" x-model="envelopeForm.color" class="w-full h-10 px-1 py-1 rounded-xl border border-slate-200 cursor-pointer bg-white">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Icône (FontAwesome)</label>
-                        <input type="text" x-model="envelopeForm.icon" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="fa-solid fa-utensils">
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Icône</label>
+                        <input type="text" x-model="envelopeForm.icon" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="fa-solid fa-utensils">
                     </div>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
@@ -624,19 +685,23 @@
     <!-- Modal Charge Fixe -->
     <div x-show="modals.fixed" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-            <h3 class="text-lg font-bold text-slate-900">Charge Fixe</h3>
+            <h3 class="text-lg font-bold text-slate-900" x-text="fixedForm.id ? 'Modifier la charge fixe' : 'Nouvelle Charge Fixe'"></h3>
             <form @submit.prevent="submitFixed" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Libellé</label>
-                    <input type="text" required x-model="fixedForm.label" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="Loyer">
+                    <input type="text" required x-model="fixedForm.label" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Loyer">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Montant (€)</label>
-                    <input type="number" step="0.01" required x-model="fixedForm.amount" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="750">
+                    <input type="number" step="0.01" required x-model="fixedForm.amount" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="750">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Date indicative du prélèvement</label>
+                    <input type="date" required x-model="fixedForm.date" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Compte</label>
-                    <select x-model="fixedForm.accountId" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                    <select x-model="fixedForm.accountId" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <template x-for="acc in accounts" :key="acc.id">
                             <option :value="acc.id" x-text="acc.name"></option>
                         </template>
@@ -653,19 +718,23 @@
     <!-- Modal Revenu -->
     <div x-show="modals.income" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-            <h3 class="text-lg font-bold text-slate-900">Revenu</h3>
+            <h3 class="text-lg font-bold text-slate-900" x-text="incomeForm.id ? 'Modifier le revenu' : 'Nouveau Revenu'"></h3>
             <form @submit.prevent="submitIncome" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Libellé</label>
-                    <input type="text" required x-model="incomeForm.label" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="Salaire">
+                    <input type="text" required x-model="incomeForm.label" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Salaire">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Montant (€)</label>
-                    <input type="number" step="0.01" required x-model="incomeForm.amount" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="2000">
+                    <input type="number" step="0.01" required x-model="incomeForm.amount" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="2000">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Date indicative de perception</label>
+                    <input type="date" required x-model="incomeForm.date" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Compte</label>
-                    <select x-model="incomeForm.accountId" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                    <select x-model="incomeForm.accountId" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <template x-for="acc in accounts" :key="acc.id">
                             <option :value="acc.id" x-text="acc.name"></option>
                         </template>
@@ -682,15 +751,15 @@
     <!-- Modal Compte -->
     <div x-show="modals.account" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-            <h3 class="text-lg font-bold text-slate-900">Compte Bancaire</h3>
+            <h3 class="text-lg font-bold text-slate-900" x-text="accountForm.id ? 'Modifier le compte' : 'Nouveau Compte Bancaire'"></h3>
             <form @submit.prevent="submitAccount" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nom du compte</label>
-                    <input type="text" required x-model="accountForm.name" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="Compte Courant Principal">
+                    <input type="text" required x-model="accountForm.name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Compte Courant">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Solde initial (€)</label>
-                    <input type="number" step="0.01" required x-model="accountForm.initialBalance" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="1000">
+                    <input type="number" step="0.01" required x-model="accountForm.initialBalance" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1000">
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" @click="modals.account = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Annuler</button>
@@ -700,317 +769,322 @@
         </div>
     </div>
 
-    <!-- Modal Transfert d'excédent -->
-    <div x-show="modals.transfer" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
-            <h3 class="text-lg font-bold text-slate-900">Transférer un excédent</h3>
-            <form @submit.prevent="submitTransfer" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Enveloppe source</label>
-                    <select x-model="transferForm.fromEnvelopeId" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
-                        <template x-for="env in currentMonthEnvelopes" :key="env.id">
-                            <option :value="env.id" x-text="env.name + ' (' + formatCurrency(env.budget - getSpentForEnvelope(env.id)) + ')'"></option>
-                        </template>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Enveloppe destination</label>
-                    <select x-model="transferForm.toEnvelopeId" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
-                        <template x-for="env in currentMonthEnvelopes" :key="env.id">
-                            <option :value="env.id" x-text="env.name"></option>
-                        </template>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Montant (€)</label>
-                    <input type="number" step="0.01" required x-model="transferForm.amount" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="50">
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="modals.transfer = false" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Annuler</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow">Transférer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Modal Pointage rapide -->
     <div x-show="modals.cleared" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4">
             <h3 class="text-lg font-bold text-slate-900" x-text="clearedModalType === 'incomes' ? 'Pointer les revenus' : 'Pointer les charges fixes'"></h3>
-            <div class="max-h-60 overflow-y-auto space-y-2">
+            <div class="max-h-72 overflow-y-auto space-y-2">
                 <template x-for="item in (clearedModalType === 'incomes' ? currentMonthIncomes : currentMonthFixed)" :key="item.id">
-                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <div>
-                            <p class="text-sm font-semibold text-slate-800" x-text="item.label"></p>
-                            <p class="text-xs text-slate-400" x-text="formatCurrency(item.amount) + ' › ' + getAccountName(item.accountId)"></p>
+                    <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg whitespace-nowrap" x-text="formatDate(item.date)"></span>
+                            <span class="text-sm font-semibold text-slate-800 truncate" x-text="item.label"></span>
+                            <span class="text-sm font-bold whitespace-nowrap" :class="clearedModalType === 'incomes' ? 'text-emerald-600' : 'text-amber-600'" x-text="formatCurrency(item.amount)"></span>
+                            <span class="text-xs text-slate-400 truncate hidden sm:inline" x-text="'• ' + getAccountName(item.accountId)"></span>
                         </div>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <span class="text-xs font-medium text-slate-500" x-text="item.cleared ? 'Pointé' : 'À pointer'"></span>
-                            <input type="checkbox" x-model="item.cleared" @change="saveData()" class="rounded border-slate-300 text-indigo-600 w-5 h-5">
+                        <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap flex-shrink-0">
+                            <span class="text-xs font-medium text-slate-500 hidden md:inline" x-text="item.cleared ? 'Pointé' : 'À pointer'"></span>
+                            <input type="checkbox" x-model="item.cleared" @change="saveData()" class="rounded border-slate-300 text-indigo-600 w-5 h-5 cursor-pointer">
                         </label>
                     </div>
                 </template>
             </div>
             <div class="flex justify-end pt-2">
-                <button type="button" @click="modals.cleared = false" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white">Fermer</button>
+                <button type="button" @click="modals.cleared = false" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow">Fermer</button>
             </div>
         </div>
     </div>
 
-    <!-- APPLICATION SCRIPT -->
-    <script>
-        const supabaseClient = (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.supabase) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    <!-- Modal Résumé des Enveloppes -->
+    <div x-show="modals.envelopesSummary" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" x-cloak>
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Détail des Enveloppes Budgétaires</h3>
+                    <p class="text-xs text-slate-500" x-text="'Total budgété : ' + formatCurrency(getTotalEnvelopesBudget())"></p>
+                </div>
+                <button @click="modals.envelopesSummary = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="max-h-80 overflow-y-auto space-y-3">
+                <template x-for="env in currentMonthEnvelopes" :key="env.id">
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <span class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-xs" :style="'background-color: ' + env.color">
+                                <i :class="env.icon"></i>
+                            </span>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800" x-text="env.name"></h4>
+                                <p class="text-[11px] text-slate-400" x-text="env.category + ' • Dépensé : ' + formatCurrency(getSpentForEnvelope(env.id))"></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-slate-900" x-text="formatCurrency(env.budget)"></p>
+                            <p class="text-[11px] font-semibold" :class="(env.budget - getSpentForEnvelope(env.id)) < 0 ? 'text-red-600' : 'text-emerald-600'" x-text="'Restant : ' + formatCurrency(env.budget - getSpentForEnvelope(env.id))"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+                <button @click="modals.envelopesSummary = false; currentTab = 'envelopes'" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-pen-to-square"></i> Gérer / Modifier les enveloppes
+                </button>
+                <button type="button" @click="modals.envelopesSummary = false" class="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow">Fermer</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal Menu Mobile (Toutes les options) -->
+    <div x-show="modals.mobileMenu" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-xs p-0 sm:p-4" x-cloak>
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-900">Menu & Navigation</h3>
+                <button @click="modals.mobileMenu = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-2">
+                <button @click="currentTab = 'dashboard'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-house-chimney w-5"></i> Tableau de bord
+                </button>
+                <button @click="currentTab = 'envelopes'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'envelopes' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-envelope-open-text w-5"></i> Enveloppes & Budgets
+                </button>
+                <button @click="currentTab = 'fixed'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'fixed' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i> Charges Fixes
+                </button>
+                <button @click="currentTab = 'incomes'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'incomes' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-sack-dollar w-5"></i> Revenus
+                </button>
+                <button @click="currentTab = 'accounts'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'accounts' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-building-columns w-5"></i> Comptes Bancaires
+                </button>
+                <button @click="currentTab = 'categories'; modals.mobileMenu = false; $nextTick(() => renderChart())" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'categories' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-tags w-5"></i> Catégories & Analyses
+                </button>
+                <button @click="currentTab = 'projections'; modals.mobileMenu = false; $nextTick(() => renderProjectionsChart())" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'projections' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-chart-line w-5"></i> Projections Enveloppes
+                </button>
+                <button @click="currentTab = 'settings'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition" :class="currentTab === 'settings' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                    <i class="fa-solid fa-cloud-arrow-down w-5"></i> Sauvegarde & Données
+                </button>
+
+                <!-- Mobile menu deuxième section : Espace Personnel -->
+                <div class="pt-3 border-t border-slate-100">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Espace Personnel</p>
+                    <button @click="currentTab = 'profile'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition mb-1" :class="currentTab === 'profile' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                        <i class="fa-solid fa-user-gear w-5"></i> Mon Compte & Sécurité
+                    </button>
+                    <button @click="currentTab = 'page1'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition mb-1" :class="currentTab === 'page1' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                        <i class="fa-solid fa-file w-5"></i> Page Vierge 1
+                    </button>
+                    <button @click="currentTab = 'page2'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition mb-1" :class="currentTab === 'page2' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                        <i class="fa-solid fa-file w-5"></i> Page Vierge 2
+                    </button>
+                    <button @click="currentTab = 'page3'; modals.mobileMenu = false" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition mb-1" :class="currentTab === 'page3' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'">
+                        <i class="fa-solid fa-file w-5"></i> Page Vierge 3
+                    </button>
+                </div>
+            </div>
+            <div class="pt-2">
+                <button @click="modals.mobileMenu = false" class="w-full py-2.5 rounded-xl text-sm font-semibold bg-slate-200 text-slate-700">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
         function appData() {
             return {
-                isAuthenticated: false,
-                authMode: 'login',
-                authMessage: '',
-                authError: false,
-                authForm: { email: '', password: '', name: '' },
-                currentUser: null,
                 currentTab: 'dashboard',
-                currentYear: new Date().getFullYear(),
-                currentMonth: new Date().getMonth() + 1, // 1-12
-                
+                currentDate: new Date(),
+                userEmail: 'utilisateur@enveloppeszen.fr',
+                passwordForm: { current: '', newPass: '', confirm: '' },
+                passwordMessage: '',
+                passwordError: false,
                 accounts: [],
                 envelopes: [],
                 fixedCharges: [],
                 incomes: [],
                 expenses: [],
-                transfers: [],
-
+                backupMessage: '',
+                backupError: false,
+                categoryChartInstance: null,
+                projectionsChartInstance: null,
                 modals: {
-                    expense: false,
+                    operation: false,
                     envelope: false,
                     fixed: false,
                     income: false,
                     account: false,
-                    transfer: false,
-                    cleared: false
+                    cleared: false,
+                    envelopesSummary: false,
+                    mobileMenu: false
                 },
                 clearedModalType: 'incomes',
-
-                expenseForm: { label: '', amount: '', envelopeId: '', accountId: '', date: new Date().toISOString().split('T')[0] },
+                operationForm: { id: null, type: 'expense', label: '', subcategory: '', amount: '', envelopeId: '', accountId: '', date: new Date().toISOString().split('T')[0] },
                 envelopeForm: { id: null, name: '', budget: '', category: 'Essentiel', color: '#6366f1', icon: 'fa-solid fa-wallet' },
-                fixedForm: { id: null, label: '', amount: '', accountId: '', cleared: false },
-                incomeForm: { id: null, label: '', amount: '', accountId: '', cleared: false },
-                accountForm: { id: null, name: '', initialBalance: 0 },
-                transferForm: { fromEnvelopeId: '', toEnvelopeId: '', amount: '' },
+                fixedForm: { id: null, label: '', amount: '', date: new Date().toISOString().split('T')[0], accountId: '', cleared: false },
+                incomeForm: { id: null, label: '', amount: '', date: new Date().toISOString().split('T')[0], accountId: '', cleared: false },
+                accountForm: { id: null, name: '', initialBalance: '' },
 
                 initApp() {
-                    // Check if redirected from Supabase email confirmation with hash tokens
-                    const hash = window.location.hash;
-                    if (hash && hash.includes('access_token') && supabaseClient) {
-                        supabaseClient.auth.getSession().then(({ data: { session } }) => {
-                            if (session) {
-                                this.currentUser = { id: session.user.id, email: session.user.email, name: session.user.user_metadata?.name || 'Utilisateur' };
-                                this.isAuthenticated = true;
-                                localStorage.setItem('ez_user', JSON.stringify(this.currentUser));
-                                this.loadData();
-                                // Clean URL hash
-                                window.history.replaceState({}, document.title, window.location.pathname);
-                            }
-                        });
-                        return;
-                    }
-
-                    const savedUser = localStorage.getItem('ez_user');
-                    if (savedUser) {
-                        this.currentUser = JSON.parse(savedUser);
-                        this.isAuthenticated = true;
-                        this.loadData();
-                    } else if (supabaseClient) {
-                        supabaseClient.auth.getSession().then(({ data: { session } }) => {
-                            if (session) {
-                                this.currentUser = { id: session.user.id, email: session.user.email, name: session.user.user_metadata?.name || 'Utilisateur' };
-                                this.isAuthenticated = true;
-                                this.loadData();
-                            }
-                        });
-                    }
-                },
-
-                async handleLogin() {
-                    this.authMessage = '';
-                    if (supabaseClient) {
-                        const { data, error } = await supabaseClient.auth.signInWithPassword({
-                            email: this.authForm.email,
-                            password: this.authForm.password
-                        });
-                        if (error) {
-                            this.authError = true;
-                            this.authMessage = error.message;
-                        } else {
-                            this.currentUser = { id: data.user.id, email: data.user.email, name: data.user.user_metadata?.name || 'Utilisateur' };
-                            this.isAuthenticated = true;
-                            localStorage.setItem('ez_user', JSON.stringify(this.currentUser));
-                            this.loadData();
+                    const saved = localStorage.getItem('enveloppes_zen_data');
+                    if (saved) {
+                        try {
+                            const data = JSON.parse(saved);
+                            this.userEmail = data.userEmail || 'utilisateur@enveloppeszen.fr';
+                            this.accounts = data.accounts || [];
+                            this.envelopes = data.envelopes || [];
+                            this.fixedCharges = (data.fixedCharges || []).map(f => ({ ...f, date: f.date || `${f.month}-01` }));
+                            this.incomes = (data.incomes || []).map(i => ({ ...i, date: i.date || `${i.month}-01` }));
+                            this.expenses = data.expenses || [];
+                        } catch(e) {
+                            console.error('Erreur chargement données', e);
+                            this.loadDefaultData();
                         }
-                    } else {
-                        this.authError = true;
-                        this.authMessage = 'Configuration Supabase manquante. Veuillez configurer vos clés.';
-                    }
-                },
-
-                async handleRegister() {
-                    this.authMessage = '';
-                    if (supabaseClient) {
-                        // Get current site URL to redirect back properly after email confirmation
-                        const redirectUrl = window.location.origin + window.location.pathname;
-                        const { data, error } = await supabaseClient.auth.signUp({
-                            email: this.authForm.email,
-                            password: this.authForm.password,
-                            options: { 
-                                data: { name: this.authForm.name },
-                                emailRedirectTo: redirectUrl
-                            }
-                        });
-                        if (error) {
-                            this.authError = true;
-                            if (error.message && (error.message.toLowerCase().includes('rate limit') || error.message.toLowerCase().includes('too many requests'))) {
-                                this.authMessage = 'Trop de tentatives ou d\'e-mails envoyés avec cette adresse. Veuillez patienter quelques minutes avant de réessayer.';
-                            } else {
-                                this.authMessage = error.message;
-                            }
-                        } else {
-                            this.authError = false;
-                            this.authMessage = 'Inscription réussie ! Un e-mail de confirmation vous a été envoyé. Veuillez patienter et vérifier votre boîte de réception.';
-                            this.authMode = 'login';
-                        }
-                    } else {
-                        this.authError = true;
-                        this.authMessage = 'Configuration Supabase manquante.';
-                    }
-                },
-
-                async handleGoogleLogin() {
-                    if (supabaseClient) {
-                        await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
-                    } else {
-                        alert("Veuillez configurer Supabase pour la connexion Google.");
-                    }
-                },
-
-                async handleForgot() {
-                    if (supabaseClient) {
-                        const { error } = await supabaseClient.auth.resetPasswordForEmail(this.authForm.email);
-                        this.authError = !!error;
-                        this.authMessage = error ? error.message : 'E-mail de réinitialisation envoyé.';
-                    }
-                },
-
-                logout() {
-                    if (supabaseClient) supabaseClient.auth.signOut();
-                    localStorage.removeItem('ez_user');
-                    this.isAuthenticated = false;
-                    this.currentUser = null;
-                },
-
-                loadDefaultData() {
-                    this.accounts = [{ id: 'acc_1', name: 'Compte Courant', initialBalance: 1200 }];
-                    this.envelopes = [
-                        { id: 'env_1', name: 'Alimentation', budget: 400, category: 'Essentiel', color: '#6366f1', icon: 'fa-solid fa-utensils' },
-                        { id: 'env_2', name: 'Carburant', budget: 150, category: 'Transport', color: '#0ea5e9', icon: 'fa-solid fa-gas-pump' },
-                        { id: 'env_3', name: 'Loisirs', budget: 100, category: 'Plaisir', color: '#10b981', icon: 'fa-solid fa-ticket' }
-                    ];
-                    this.fixedCharges = [{ id: 'fix_1', label: 'Loyer', amount: 700, accountId: 'acc_1', cleared: false }];
-                    this.incomes = [{ id: 'inc_1', label: 'Salaire', amount: 2200, accountId: 'acc_1', cleared: true }];
-                    this.expenses = [];
-                },
-
-                loadData() {
-                    const localData = localStorage.getItem('ez_data_' + (this.currentUser?.id || 'default'));
-                    if (localData) {
-                        const parsed = JSON.parse(localData);
-                        this.accounts = parsed.accounts || [];
-                        this.envelopes = parsed.envelopes || [];
-                        this.fixedCharges = parsed.fixedCharges || [];
-                        this.incomes = parsed.incomes || [];
-                        this.expenses = parsed.expenses || [];
                     } else {
                         this.loadDefaultData();
                     }
+                    if (this.accounts.length > 0 && !this.operationForm.accountId) {
+                        this.operationForm.accountId = this.accounts[0].id;
+                    }
+                    if (this.envelopes.length > 0 && !this.operationForm.envelopeId) {
+                        this.operationForm.envelopeId = this.envelopes[0].id;
+                    }
+                },
+
+                loadDefaultData() {
+                    this.accounts = [
+                        { id: 'acc_1', name: 'Compte Courant', initialBalance: 1200 },
+                        { id: 'acc_2', name: 'Compte Épargne', initialBalance: 5000 }
+                    ];
+                    this.envelopes = [
+                        { id: 'env_1', name: 'Alimentation', budget: 400, category: 'Essentiel', color: '#10b981', icon: 'fa-solid fa-utensils' },
+                        { id: 'env_2', name: 'Carburant / Transport', budget: 150, category: 'Essentiel', color: '#3b82f6', icon: 'fa-solid fa-car' },
+                        { id: 'env_3', name: 'Loisirs & Sorties', budget: 100, category: 'Plaisir', color: '#8b5cf6', icon: 'fa-solid fa-film' }
+                    ];
+                    const nowStr = new Date().toISOString().slice(0, 7);
+                    this.fixedCharges = [
+                        { id: 'fix_1', month: nowStr, date: `${nowStr}-05`, label: 'Loyer', amount: 750, accountId: 'acc_1', cleared: true },
+                        { id: 'fix_2', month: nowStr, date: `${nowStr}-10`, label: 'Internet / Box', amount: 35, accountId: 'acc_1', cleared: true }
+                    ];
+                    this.incomes = [
+                        { id: 'inc_1', month: nowStr, date: `${nowStr}-01`, label: 'Salaire', amount: 2200, accountId: 'acc_1', cleared: true }
+                    ];
+                    this.expenses = [
+                        { id: 'exp_1', month: nowStr, label: 'Courses Carrefour', subcategory: 'Supermarché', amount: 85.50, envelopeId: 'env_1', accountId: 'acc_1', date: new Date().toISOString().split('T')[0] },
+                        { id: 'exp_2', month: nowStr, label: 'Station Essence', subcategory: 'Carburant', amount: 50.00, envelopeId: 'env_2', accountId: 'acc_1', date: new Date().toISOString().split('T')[0] }
+                    ];
+                    this.saveData();
                 },
 
                 saveData() {
-                    const dataToSave = {
+                    const data = {
+                        userEmail: this.userEmail,
                         accounts: this.accounts,
                         envelopes: this.envelopes,
                         fixedCharges: this.fixedCharges,
                         incomes: this.incomes,
                         expenses: this.expenses
                     };
-                    localStorage.setItem('ez_data_' + (this.currentUser?.id || 'default'), JSON.stringify(dataToSave));
+                    localStorage.setItem('enveloppes_zen_data', JSON.stringify(data));
                 },
 
-                formatCurrency(val) {
-                    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(val || 0);
+                updatePassword() {
+                    if (this.passwordForm.newPass !== this.passwordForm.confirm) {
+                        this.passwordMessage = 'Les nouveaux mots de passe ne correspondent pas.';
+                        this.passwordError = true;
+                        return;
+                    }
+                    if (this.passwordForm.newPass.length < 6) {
+                        this.passwordMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
+                        this.passwordError = true;
+                        return;
+                    }
+                    this.passwordMessage = 'Mot de passe modifié avec succès !';
+                    this.passwordError = false;
+                    this.passwordForm = { current: '', newPass: '', confirm: '' };
                 },
 
-                formatCurrentMonth() {
-                    const date = new Date(this.currentYear, this.currentMonth - 1, 1);
-                    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                },
-
-                formatDate(dStr) {
-                    if (!dStr) return '';
-                    return new Date(dStr).toLocaleDateString('fr-FR');
-                },
-
-                changeMonth(dir) {
-                    this.currentMonth += dir;
-                    if (this.currentMonth > 12) {
-                        this.currentMonth = 1;
-                        this.currentYear++;
-                    } else if (this.currentMonth < 1) {
-                        this.currentMonth = 12;
-                        this.currentYear--;
+                deleteAccountData() {
+                    if (confirm('Êtes-vous sûr de vouloir supprimer définitivement votre compte et toutes vos données ?')) {
+                        localStorage.removeItem('enveloppes_zen_data');
+                        alert('Votre compte a été supprimé. La page va être rechargée.');
+                        window.location.reload();
                     }
                 },
 
+                formatCurrentMonth() {
+                    return this.currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                },
+
+                getCurrentMonthKey() {
+                    const y = this.currentDate.getFullYear();
+                    const m = String(this.currentDate.getMonth() + 1).padStart(2, '0');
+                    return `${y}-${m}`;
+                },
+
+                changeMonth(delta) {
+                    this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + delta, 1);
+                },
+
                 goToCurrentMonth() {
-                    this.currentYear = new Date().getFullYear();
-                    this.currentMonth = new Date().getMonth() + 1;
+                    this.currentDate = new Date();
+                },
+
+                formatCurrency(val) {
+                    return Number(val || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+                },
+
+                formatDate(dateStr) {
+                    if (!dateStr) return '';
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        const shortYear = parts[0].slice(-2);
+                        return `${parts[2]}/${parts[1]}/${shortYear}`;
+                    }
+                    return dateStr;
+                },
+
+                get currentMonthExpenses() {
+                    const mk = this.getCurrentMonthKey();
+                    return this.expenses.filter(e => e.date && e.date.startsWith(mk));
                 },
 
                 get currentMonthEnvelopes() {
                     return this.envelopes;
                 },
 
-                get currentMonthExpenses() {
-                    return this.expenses.filter(e => {
-                        const d = new Date(e.date);
-                        return d.getFullYear() === this.currentYear && (d.getMonth() + 1) === this.currentMonth;
-                    });
+                get currentMonthFixed() {
+                    const mk = this.getCurrentMonthKey();
+                    return this.fixedCharges.filter(f => (f.date && f.date.startsWith(mk)) || f.month === mk);
                 },
 
                 get currentMonthIncomes() {
-                    return this.incomes;
-                },
-
-                get currentMonthFixed() {
-                    return this.fixedCharges;
+                    const mk = this.getCurrentMonthKey();
+                    return this.incomes.filter(i => (i.date && i.date.startsWith(mk)) || i.month === mk);
                 },
 
                 getTotalIncomes() {
-                    return this.currentMonthIncomes.reduce((acc, i) => acc + Number(i.amount), 0);
+                    return this.currentMonthIncomes.reduce((acc, item) => acc + Number(item.amount || 0), 0);
                 },
 
                 getTotalFixed() {
-                    return this.currentMonthFixed.reduce((acc, f) => acc + Number(f.amount), 0);
+                    return this.currentMonthFixed.reduce((acc, item) => acc + Number(item.amount || 0), 0);
                 },
 
                 getTotalEnvelopesBudget() {
-                    return this.currentMonthEnvelopes.reduce((acc, e) => acc + Number(e.budget), 0);
+                    return this.envelopes.reduce((acc, item) => acc + Number(item.budget || 0), 0);
                 },
 
                 getZeroBaseDifference() {
-                    return this.getTotalIncomes() - (this.getTotalFixed() + this.getTotalEnvelopesBudget());
+                    const totalInc = this.getTotalIncomes();
+                    const totalFixed = this.getTotalFixed();
+                    const totalEnv = this.getTotalEnvelopesBudget();
+                    return totalInc - totalFixed - totalEnv;
                 },
 
                 getSpentForEnvelope(envId) {
-                    return this.currentMonthExpenses.filter(e => e.envelopeId === envId).reduce((acc, e) => acc + Number(e.amount), 0);
+                    return this.currentMonthExpenses
+                        .filter(e => e.envelopeId === envId)
+                        .reduce((acc, e) => acc + Number(e.amount || 0), 0);
                 },
 
                 getEnvelopeName(envId) {
@@ -1020,24 +1094,75 @@
 
                 getAccountName(accId) {
                     const acc = this.accounts.find(a => a.id === accId);
-                    return acc ? acc.name : 'Compte';
+                    return acc ? acc.name : 'Principal';
                 },
 
                 getAccountBalance(accId) {
                     const acc = this.accounts.find(a => a.id === accId);
-                    let bal = acc ? Number(acc.initialBalance) : 0;
-                    this.incomes.filter(i => i.accountId === accId).forEach(i => bal += Number(i.amount));
-                    this.fixedCharges.filter(f => f.accountId === accId).forEach(f => bal -= Number(f.amount));
-                    this.expenses.filter(e => e.accountId === accId).forEach(e => bal -= Number(e.amount));
+                    let bal = acc ? Number(acc.initialBalance || 0) : 0;
+                    this.incomes.filter(i => i.accountId === accId).forEach(i => bal += Number(i.amount || 0));
+                    this.fixedCharges.filter(f => f.accountId === accId).forEach(f => bal -= Number(f.amount || 0));
+                    this.expenses.filter(e => e.accountId === accId).forEach(e => bal -= Number(e.amount || 0));
                     return bal;
                 },
 
                 openModal(type) {
-                    this.modals[type] = true;
-                    if (type === 'expense' && this.currentMonthEnvelopes.length > 0 && !this.expenseForm.envelopeId) {
-                        this.expenseForm.envelopeId = this.currentMonthEnvelopes[0].id;
-                        this.expenseForm.accountId = this.accounts[0]?.id;
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    if (type === 'expense' || type === 'income') {
+                        this.openOperationModal(type);
+                        return;
+                    } else if (type === 'envelope') {
+                        this.envelopeForm = { id: null, name: '', budget: '', category: 'Essentiel', color: '#6366f1', icon: 'fa-solid fa-wallet' };
+                    } else if (type === 'fixed') {
+                        this.fixedForm = { id: null, label: '', amount: '', date: todayStr, accountId: this.accounts[0]?.id || '', cleared: false };
+                    } else if (type === 'account') {
+                        this.accountForm = { id: null, name: '', initialBalance: '' };
                     }
+                    this.modals[type] = true;
+                },
+
+                openOperationModal(type = 'expense') {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    this.operationForm = {
+                        id: null,
+                        type: type,
+                        label: '',
+                        subcategory: '',
+                        amount: '',
+                        envelopeId: this.envelopes[0]?.id || '',
+                        accountId: this.accounts[0]?.id || '',
+                        date: todayStr
+                    };
+                    this.modals.operation = true;
+                },
+
+                submitOperation() {
+                    const mk = this.operationForm.date ? this.operationForm.date.slice(0, 7) : this.getCurrentMonthKey();
+                    if (this.operationForm.type === 'expense') {
+                        const newExp = {
+                            id: 'exp_' + Date.now(),
+                            label: this.operationForm.label,
+                            subcategory: this.operationForm.subcategory,
+                            amount: Number(this.operationForm.amount),
+                            envelopeId: this.operationForm.envelopeId,
+                            accountId: this.operationForm.accountId,
+                            date: this.operationForm.date
+                        };
+                        this.expenses.push(newExp);
+                    } else {
+                        const newInc = {
+                            id: 'inc_' + Date.now(),
+                            month: mk,
+                            date: this.operationForm.date,
+                            label: this.operationForm.label,
+                            amount: Number(this.operationForm.amount),
+                            accountId: this.operationForm.accountId,
+                            cleared: true
+                        };
+                        this.incomes.push(newInc);
+                    }
+                    this.saveData();
+                    this.modals.operation = false;
                 },
 
                 openClearedModal(type) {
@@ -1045,12 +1170,8 @@
                     this.modals.cleared = true;
                 },
 
-                submitExpense() {
-                    this.expenses.push({ id: 'exp_' + Date.now(), ...this.expenseForm });
-                    this.saveData();
-                    this.modals.expense = false;
-                    this.expenseForm.label = '';
-                    this.expenseForm.amount = '';
+                openEnvelopesSummaryModal() {
+                    this.modals.envelopesSummary = true;
                 },
 
                 deleteExpense(id) {
@@ -1061,13 +1182,22 @@
                 submitEnvelope() {
                     if (this.envelopeForm.id) {
                         const idx = this.envelopes.findIndex(e => e.id === this.envelopeForm.id);
-                        if (idx !== -1) this.envelopes[idx] = { ...this.envelopeForm };
+                        if (idx !== -1) {
+                            this.envelopes[idx] = { ...this.envelopeForm, budget: Number(this.envelopeForm.budget) };
+                        }
                     } else {
-                        this.envelopes.push({ id: 'env_' + Date.now(), ...this.envelopeForm });
+                        const newEnv = {
+                            id: 'env_' + Date.now(),
+                            name: this.envelopeForm.name,
+                            budget: Number(this.envelopeForm.budget),
+                            category: this.envelopeForm.category,
+                            color: this.envelopeForm.color,
+                            icon: this.envelopeForm.icon
+                        };
+                        this.envelopes.push(newEnv);
                     }
                     this.saveData();
                     this.modals.envelope = false;
-                    this.envelopeForm = { id: null, name: '', budget: '', category: 'Essentiel', color: '#6366f1', icon: 'fa-solid fa-wallet' };
                 },
 
                 editEnvelope(env) {
@@ -1081,14 +1211,30 @@
                 },
 
                 submitFixed() {
-                    this.fixedCharges.push({ id: 'fix_' + Date.now(), ...this.fixedForm });
+                    const mk = this.fixedForm.date ? this.fixedForm.date.slice(0, 7) : this.getCurrentMonthKey();
+                    if (this.fixedForm.id) {
+                        const idx = this.fixedCharges.findIndex(f => f.id === this.fixedForm.id);
+                        if (idx !== -1) {
+                            this.fixedCharges[idx] = { ...this.fixedForm, month: mk, amount: Number(this.fixedForm.amount) };
+                        }
+                    } else {
+                        const newItem = {
+                            id: 'fix_' + Date.now(),
+                            month: mk,
+                            date: this.fixedForm.date,
+                            label: this.fixedForm.label,
+                            amount: Number(this.fixedForm.amount),
+                            accountId: this.fixedForm.accountId,
+                            cleared: this.fixedForm.cleared
+                        };
+                        this.fixedCharges.push(newItem);
+                    }
                     this.saveData();
                     this.modals.fixed = false;
-                    this.fixedForm = { id: null, label: '', amount: '', accountId: '', cleared: false };
                 },
 
                 editFixed(item) {
-                    this.fixedForm = { ...item };
+                    this.fixedForm = { ...item, date: item.date || `${item.month}-01` };
                     this.modals.fixed = true;
                 },
 
@@ -1098,14 +1244,30 @@
                 },
 
                 submitIncome() {
-                    this.incomes.push({ id: 'inc_' + Date.now(), ...this.incomeForm });
+                    const mk = this.incomeForm.date ? this.incomeForm.date.slice(0, 7) : this.getCurrentMonthKey();
+                    if (this.incomeForm.id) {
+                        const idx = this.incomes.findIndex(i => i.id === this.incomeForm.id);
+                        if (idx !== -1) {
+                            this.incomes[idx] = { ...this.incomeForm, month: mk, amount: Number(this.incomeForm.amount) };
+                        }
+                    } else {
+                        const newItem = {
+                            id: 'inc_' + Date.now(),
+                            month: mk,
+                            date: this.incomeForm.date,
+                            label: this.incomeForm.label,
+                            amount: Number(this.incomeForm.amount),
+                            accountId: this.incomeForm.accountId,
+                            cleared: this.incomeForm.cleared
+                        };
+                        this.incomes.push(newItem);
+                    }
                     this.saveData();
                     this.modals.income = false;
-                    this.incomeForm = { id: null, label: '', amount: '', accountId: '', cleared: false };
                 },
 
-                editIncome(inc) {
-                    this.incomeForm = { ...inc };
+                editIncome(item) {
+                    this.incomeForm = { ...item, date: item.date || `${item.month}-01` };
                     this.modals.income = true;
                 },
 
@@ -1115,10 +1277,21 @@
                 },
 
                 submitAccount() {
-                    this.accounts.push({ id: 'acc_' + Date.now(), ...this.accountForm });
+                    if (this.accountForm.id) {
+                        const idx = this.accounts.findIndex(a => a.id === this.accountForm.id);
+                        if (idx !== -1) {
+                            this.accounts[idx] = { ...this.accountForm, initialBalance: Number(this.accountForm.initialBalance) };
+                        }
+                    } else {
+                        const newAcc = {
+                            id: 'acc_' + Date.now(),
+                            name: this.accountForm.name,
+                            initialBalance: Number(this.accountForm.initialBalance)
+                        };
+                        this.accounts.push(newAcc);
+                    }
                     this.saveData();
                     this.modals.account = false;
-                    this.accountForm = { id: null, name: '', initialBalance: 0 };
                 },
 
                 editAccount(acc) {
@@ -1127,60 +1300,131 @@
                 },
 
                 deleteAccount(id) {
+                    if (this.accounts.length <= 1) {
+                        this.backupMessage = 'Vous devez conserver au moins un compte bancaire.';
+                        this.backupError = true;
+                        return;
+                    }
                     this.accounts = this.accounts.filter(a => a.id !== id);
                     this.saveData();
                 },
 
-                submitTransfer() {
-                    alert("Transfert enregistré !");
-                    this.modals.transfer = false;
+                exportBackupFile() {
+                    try {
+                        const data = {
+                            accounts: this.accounts,
+                            envelopes: this.envelopes,
+                            fixedCharges: this.fixedCharges,
+                            incomes: this.incomes,
+                            expenses: this.expenses
+                        };
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `enveloppes_zen_backup_${this.getCurrentMonthKey()}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        this.backupMessage = 'Sauvegarde exportée avec succès !';
+                        this.backupError = false;
+                    } catch(e) {
+                        this.backupMessage = 'Erreur lors de l\'exportation de la sauvegarde.';
+                        this.backupError = true;
+                    }
+                },
+
+                importBackupFile(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            if (data.accounts && data.envelopes) {
+                                this.accounts = data.accounts;
+                                this.envelopes = data.envelopes;
+                                this.fixedCharges = data.fixedCharges || [];
+                                this.incomes = data.incomes || [];
+                                this.expenses = data.expenses || [];
+                                this.saveData();
+                                this.backupMessage = 'Sauvegarde restaurée avec succès !';
+                                this.backupError = false;
+                            } else {
+                                throw new Error('Format invalide');
+                            }
+                        } catch(err) {
+                            this.backupMessage = 'Erreur : Fichier de sauvegarde invalide ou corrompu.';
+                            this.backupError = true;
+                        }
+                    };
+                    reader.readAsText(file);
                 },
 
                 renderChart() {
                     const ctx = document.getElementById('categoryChart');
                     if (!ctx) return;
-                    if (window.myPieChart) window.myPieChart.destroy();
+                    if (this.categoryChartInstance) {
+                        this.categoryChartInstance.destroy();
+                    }
+                    const labels = this.envelopes.map(e => e.name);
+                    const data = this.envelopes.map(e => this.getSpentForEnvelope(e.id));
+                    const colors = this.envelopes.map(e => e.color);
 
-                    const categories = {};
-                    this.currentMonthEnvelopes.forEach(env => {
-                        categories[env.name] = this.getSpentForEnvelope(env.id);
-                    });
-
-                    window.myPieChart = new Chart(ctx, {
+                    this.categoryChartInstance = new Chart(ctx, {
                         type: 'doughnut',
                         data: {
-                            labels: Object.keys(categories),
+                            labels: labels,
                             datasets: [{
-                                data: Object.values(categories),
-                                backgroundColor: ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                                data: data,
+                                backgroundColor: colors,
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { font: { family: 'Inter', size: 12 } }
+                                }
+                            }
+                        }
                     });
                 },
 
                 renderProjectionsChart() {
                     const ctx = document.getElementById('projectionsChart');
                     if (!ctx) return;
-                    if (window.myLineChart) window.myLineChart.destroy();
+                    if (this.projectionsChartInstance) {
+                        this.projectionsChartInstance.destroy();
+                    }
+                    const totalInc = this.getTotalIncomes();
+                    const totalFixed = this.getTotalFixed();
+                    const totalEnv = this.getTotalEnvelopesBudget();
 
-                    window.myLineChart = new Chart(ctx, {
-                        type: 'line',
+                    this.projectionsChartInstance = new Chart(ctx, {
+                        type: 'bar',
                         data: {
-                            labels: ['Mai', 'Juin', 'Juillet', 'Août', 'Septembre'],
+                            labels: ['Revenus', 'Charges Fixes', 'Enveloppes Budgétaires'],
                             datasets: [{
-                                label: 'Revenus',
-                                data: [2100, 2200, 2150, 2200, this.getTotalIncomes()],
-                                borderColor: '#10b981',
-                                tension: 0.1
-                            }, {
-                                label: 'Dépenses & Charges',
-                                data: [1800, 1950, 1900, 2000, this.getTotalFixed() + this.currentMonthExpenses.reduce((a,b)=>a+b.amount,0)],
-                                borderColor: '#ef4444',
-                                tension: 0.1
+                                label: 'Montants en €',
+                                data: [totalInc, totalFixed, totalEnv],
+                                backgroundColor: ['#10b981', '#f59e0b', '#6366f1'],
+                                borderRadius: 8
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
                     });
                 }
             };
